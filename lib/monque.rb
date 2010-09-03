@@ -26,11 +26,20 @@ module Kernel
 end
 
 module Monque
-  RETRY_DELAY = 3600 # wait this number secs before trying a job again
+  RETRY_DELAY = 1800 # wait this number secs before trying a job again
   REPLICATION_FACTOR = 1
   
-  def self.jobs_collection
-    Mongo::Connection.new['monque']['jobs']
+  @mongo_host = '127.0.0.1'
+  @mongo_port = 27017
+  
+  def self.mongo_host=(h); @mongo_host = h; end
+  def self.mongo_port=(p); @mongo_port = p; end
+  
+  def self.jobs_collection(host=nil, port=nil)
+    host ||= @mongo_host
+    port ||= @mongo_port
+    
+    Mongo::Connection.new(host, port)['monque']['jobs']
   end
   
   def self.queue_for_cls(cls)
@@ -62,9 +71,9 @@ module Monque
   end
   
   class Worker
-    def initialize(queues)
+    def initialize(host, port, queues)
       @queues = queues
-      @jobs = Monque.jobs_collection
+      @jobs = Monque.jobs_collection(host, port)
     end
     
     def worker_id
@@ -78,8 +87,8 @@ module Monque
           'started' => {'$lte' => (Time.now.to_f - RETRY_DELAY)},
           'finished' => {'$exists' => false}
         ).sort('added', :ascending).limit(1).first
-        
-        return nil unless speculative_job
+
+        next unless speculative_job
         
         old_procid = speculative_job['procid']
                 
@@ -107,6 +116,8 @@ module Monque
           nil
         end
       end
+      
+      nil
     end
       
     def mark_finished(job)
@@ -129,10 +140,11 @@ module Monque
       loop do
         job = reserve
         
-        if job
+        if job         
+          puts "job: #{job.inspect}" 
           cls = Kernel.fetch_class(job['class'])
           $stderr.puts "#{worker_id}: processing #{job.inspect}"
-          cls.send(:perform, JSON.load(job['data']))
+          cls.send(:perform, *JSON.load(job['data']))
           mark_finished(job)
         end
         
