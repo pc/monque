@@ -141,7 +141,6 @@ module Monque
         job = reserve
         
         if job         
-          puts "job: #{job.inspect}" 
           cls = Kernel.fetch_class(job['class'])
           $stderr.puts "#{worker_id}: processing #{job.inspect}"
           cls.send(:perform, *JSON.load(job['data']))
