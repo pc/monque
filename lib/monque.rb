@@ -71,9 +71,9 @@ module Monque
   end
   
   class Worker
-    def initialize(host, port, queues)
+    def initialize(queues)
       @queues = queues
-      @jobs = Monque.jobs_collection(host, port)
+      @jobs = Monque.jobs_collection
     end
     
     def worker_id
