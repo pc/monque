@@ -4,7 +4,7 @@ namespace :monque do
     
     queues = ENV['QUEUES'].split(',')
         
-    worker = Monque::Worker.new(mongo[0], mongo[1], queues)
+    worker = Monque::Worker.new(queues)
     worker.work
   end
 end
