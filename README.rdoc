@@ -1,0 +1,37 @@
+= Monque
+
+Monque is {Resque}[http://github.com/defunkt/resque] built atop MongoDB.
+
+A worker is something that responds to <tt>perform</tt>:
+
+  class Archive
+    @queue = :file_serve
+
+    def self.perform(repo_id, branch = 'master')
+      repo = Repository.find(repo_id)
+      repo.create_archive(branch)
+    end
+  end
+
+The <tt>@queue</tt> class instance variable determines which queue <tt>Archive</tt> jobs will be placed in.
+
+To enqueue a job, you do something like:
+
+  repo_id = repository.name
+  Monque.enqueue(Archive, repo_id)
+  
+To start a worker daemon, create a Rakefile that looks like this:
+
+  require 'monque'
+  require 'monque/tasks'
+  
+  require 'my/code'
+  
+And then launch the worker with:
+
+  QUEUE=file_server rake monque:work
+  
+By default, Monque uses a MongoDB connection at <tt>127.0.0.1:27017</tt>. To change this, you can call:
+
+  Monque.mongo_host = '192.168.0.1'
+  Monque.mongo_port = 2000
