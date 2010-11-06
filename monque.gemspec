@@ -1,6 +1,6 @@
 spec = Gem::Specification.new do |s|
   s.name = 'monque'
-  s.version = '0.1.2'
+  s.version = '0.1.3'
   s.summary = 'Pre-release beta version of Monque'
   s.author = 'Patrick Collison'
   s.email = 'patrick@collison.ie'
